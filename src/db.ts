@@ -1,7 +1,7 @@
-import { model,Schema } from "mongoose";
+import mongoose,{ model,Schema } from "mongoose";
 
 console.log("Mongo is connected")
-
+// mongoose.connect("")
 
 const UserSchema = new Schema({
     username: {type:String, unique: true},
