@@ -4,7 +4,7 @@ import { UserModel } from './db'
 import * as zod from "zod";
 import jwt from 'jsonwebtoken'
 import * as bcrypt from 'bcrypt';
-
+const JWT_USER = '1452dsufberf'
 
 const app = express()
 app.use(express.json())
@@ -56,12 +56,30 @@ app.post("/api/v1/signup", async (req, res) => {
     
 })
 
-app.post("/api/v1/signin", (req, res) => {
+app.post("/api/v1/signin", async(req, res) => {
 
     const username = req.body.username
     const password = req.body.password
     const email = req.body.email
 
+    const existinguser = await UserModel.findOne({
+        email,
+        password,
+    })
+
+    // const passwordMatch = bcrypt.compare(password, existinguser.password)
+    
+    if(existinguser){
+        const token = jwt.sign({
+            id: existinguser._id,
+
+        },JWT_USER)
+    }
+    else{
+        res.status(403).json({
+            message:"Incorrect credentials"
+        })
+    }
 
 
 })
@@ -70,11 +88,11 @@ app.post("/api/v1/content", (req, res) => {
 
 })
 
-app.get("/api/v1/signup", (req, res) => {
+app.get("/api/v1/content", (req, res) => {
 
 })
 
-app.delete("/api/v1/signup", (req, res) => {
+app.delete("/api/v1/content", (req, res) => {
 
 })
 
