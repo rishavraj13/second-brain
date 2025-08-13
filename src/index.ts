@@ -4,7 +4,8 @@ import { UserModel } from './db'
 import * as zod from "zod";
 import jwt from 'jsonwebtoken'
 import * as bcrypt from 'bcrypt';
-const JWT_USER = '1452dsufberf'
+import { JWT_USER } from './config'
+import { UserMiddleware } from './usermiddleware';
 
 const app = express()
 app.use(express.json())
@@ -84,7 +85,7 @@ app.post("/api/v1/signin", async(req, res) => {
 
 })
 
-app.post("/api/v1/content", (req, res) => {
+app.post("/api/v1/content", UserMiddleware,(req, res) => {
 
 })
 
