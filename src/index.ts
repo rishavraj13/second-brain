@@ -1,6 +1,6 @@
 import express from 'express'
 import mongoose from 'mongoose'
-import { UserModel } from './db'
+import { ContentModel, UserModel } from './db'
 import * as zod from "zod";
 import jwt from 'jsonwebtoken'
 import * as bcrypt from 'bcrypt';
@@ -85,11 +85,36 @@ app.post("/api/v1/signin", async(req, res) => {
 
 })
 
-app.post("/api/v1/content", UserMiddleware,(req, res) => {
+app.post("/api/v1/content", UserMiddleware,async(req, res) => {
+    const {
+        title,
+        tags,
+        link,
+    } = req.body
 
+    await ContentModel.create({
+        title,
+        link,
+        tags:[],  
+        //@ts-ignore 
+        userId: req.userId,
+    })
+
+    res.json({
+        message:"Content Added",
+    })
 })
 
-app.get("/api/v1/content", (req, res) => {
+app.get("/api/v1/content", UserMiddleware,async(req, res) => {
+    //@ts-ignore
+    const userId : req.userId
+    const content = await ContentModel.findOne({
+        userId:userId
+    }).populate(userId,"username")
+
+    res.json({
+        content
+    })
 
 })
 
