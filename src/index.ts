@@ -1,11 +1,15 @@
 import express from 'express'
 import mongoose from 'mongoose'
-import { ContentModel, UserModel } from './db'
+import { ContentModel, ShareLinkModel, UserModel } from './db'
 import * as zod from "zod";
 import jwt from 'jsonwebtoken'
 import * as bcrypt from 'bcrypt';
 import { JWT_USER } from './config'
 import { UserMiddleware } from './usermiddleware';
+import { Request } from 'express';
+import { Random } from './utils';
+type ReqWithUser = Request & { userId?: string };
+
 
 const app = express()
 app.use(express.json())
@@ -35,7 +39,6 @@ app.post("/api/v1/signup", async (req, res) => {
             email,
         } = req.body
 
-        const hashedPassword = await bcrypt.hash(password, 10)
 
         await UserModel.create({
             username: username,
@@ -44,7 +47,7 @@ app.post("/api/v1/signup", async (req, res) => {
         })
 
         return res.status(200).json({
-            message:"you have Signed Up Successfully"
+            message: "you have Signed Up Successfully"
         })
 
 
@@ -54,10 +57,10 @@ app.post("/api/v1/signup", async (req, res) => {
         })
     }
 
-    
+
 })
 
-app.post("/api/v1/signin", async(req, res) => {
+app.post("/api/v1/signin", async (req, res) => {
 
     const username = req.body.username
     const password = req.body.password
@@ -69,63 +72,88 @@ app.post("/api/v1/signin", async(req, res) => {
     })
 
     // const passwordMatch = bcrypt.compare(password, existinguser.password)
-    
-    if(existinguser){
+
+    if (existinguser) {
         const token = jwt.sign({
             id: existinguser._id,
 
-        },JWT_USER)
+        }, JWT_USER)
     }
-    else{
+    else {
         res.status(403).json({
-            message:"Incorrect credentials"
+            message: "Incorrect credentials"
         })
     }
 
 
 })
 
-app.post("/api/v1/content", UserMiddleware,async(req, res) => {
+app.post("/api/v1/content", UserMiddleware, async (req:ReqWithUser, res) => {
     const {
         title,
-        tags,
+        tags:[],
         link,
+        contentId,
     } = req.body
 
     await ContentModel.create({
         title,
         link,
-        tags:[],  
-        //@ts-ignore 
+        tags: [],
+        contentId,
         userId: req.userId,
     })
 
     res.json({
-        message:"Content Added",
+        message: "Content Added",
     })
 })
 
-app.get("/api/v1/content", UserMiddleware,async(req, res) => {
+app.get("/api/v1/content", UserMiddleware, async (req:ReqWithUser, res) => {
     //@ts-ignore
-    const userId : req.userId
+    const userId = req.userId;
     const content = await ContentModel.findOne({
-        userId:userId
-    }).populate(userId,"username")
+        userId
+    }).populate('userId', "username");
 
     res.json({
         content
     })
 
+});
+
+app.delete("/api/v1/content", UserMiddleware, async (req:ReqWithUser, res) => {
+    
+    const {contentId} = req.body;
+
+    await ContentModel.deleteMany({
+        contentId,
+
+
+        userId: req.userId
+    })
+
+    res.json({
+        message: "Content Deleted"
+    })
 })
 
-app.delete("/api/v1/content", (req, res) => {
+app.post("/api/v1/brain/share", UserMiddleware, async (req:ReqWithUser, res) => {
+    const share = req.body.share
+
+    if (share) {
+        ShareLinkModel.create({
+            userId: req.userId,
+            hash: Random(12),
+        })
+    }
 
 })
 
-app.post("/api/v1/brain/share", (req, res) => {
+app.get("/api/v1/brain/:shareLink", UserMiddleware, async (req:ReqWithUser, res) => {
+    const userId = req.userId
 
-})
+    const sharedContent = await ShareLinkModel.findOne({
 
-app.get("/api/v1/brain/:shareLink", (req, res) => {
-
+    })
 })

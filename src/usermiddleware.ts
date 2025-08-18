@@ -7,7 +7,7 @@ export const UserMiddleware = (req:Request, res:Response, next:NextFunction) =>{
 
     if(decoded){
         //@ts-ignore
-        req.userID = decoded.id;
+        req.userId = decoded.id;
         next()
     }
 
