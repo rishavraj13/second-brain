@@ -141,19 +141,72 @@ app.delete("/api/v1/content", UserMiddleware, async (req:ReqWithUser, res) => {
 app.post("/api/v1/brain/share", UserMiddleware, async (req:ReqWithUser, res) => {
     const share = req.body.share
 
+    
+
     if (share) {
-        ShareLinkModel.create({
-            userId: req.userId,
-            hash: Random(12),
+        const existingLink = await ShareLinkModel.findOne({
+        userId: req.userId
+    })
+
+    if(existingLink){
+        res.json({
+            hash: existingLink.hash
         })
     }
+    
+        const hash = Random(10)
+
+        await ShareLinkModel.create({
+            userId: req.userId,
+            hash: hash,
+        })
+
+        res.json({
+        message: "/share/" + hash
+    })
+    }
+
+    else{
+        await ShareLinkModel.deleteOne({
+            userId: req.userId
+        })
+
+        res.json({
+        message: "Link Deleted"
+    })
+    }
+
+    
 
 })
 
 app.get("/api/v1/brain/:shareLink", UserMiddleware, async (req:ReqWithUser, res) => {
-    const userId = req.userId
+    const hash = req.params.shareLink
 
-    const sharedContent = await ShareLinkModel.findOne({
+    const link = await ShareLinkModel.findOne({
+        hash
+    })
+
+    if(!link){
+        res.status(411).json({
+            message: "Sorry Incorrect link"
+        })
+        return;
+    }
+
+    //
+
+    const content = await ShareLinkModel.findOne({
+        userId:link.userId
+    })
+
+    const user = await UserModel.findOne({
+        _id: link.userId
+    })
+
+    res.json({
+        username: user?.username,
+        content: content,
 
     })
 })
